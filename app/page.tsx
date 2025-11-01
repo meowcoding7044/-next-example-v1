@@ -15,7 +15,7 @@ export default function Page() {
     if (!rehydrated) return <p>Loading...</p>;
     return (
         <main className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Next 16 ({user?.roles || "guest"})</h1>
+            <h1 className="text-3xl font-bold mb-4">GG Next v16 ({user?.roles || "guest"})</h1>
         </main>
     );
 }
