@@ -1,19 +1,24 @@
 "use client";
 import { useAuthStore } from "@/shared/stores/auth.store";
 import { authService } from "../services/auth.service";
+import { clearUser } from "@/shared/stores/auth.store";
 
 export function useAuth() {
   const setUser = useAuthStore((s) => s.setUser);
-  const setToken = useAuthStore((s) => s.setToken);
   async function login(email: string, password: string) {
     const res = await authService.login(email, password);
-    setToken(res.accessToken);
-    setUser(res.user);
+    if (res?.success && res.user) {
+      setUser(res.user);
+    }
     return res;
   }
-  function logout() {
-    setToken(null);
-    setUser(null);
+  async function logout() {
+    try {
+      await authService.logout();
+    } catch (e) {
+      // ignore
+    }
+    clearUser();
     window.location.href = "/auth/login";
   }
   return { login, logout };

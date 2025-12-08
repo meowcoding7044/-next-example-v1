@@ -9,6 +9,8 @@ export type Product = {
   status: "active" | "inactive";
 };
 
+export type ProductCreate = Omit<Product, "id">;
+
 
 
 export interface ProductListResponse {

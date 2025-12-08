@@ -1,3 +1,18 @@
+# Frontend README
+
+Run locally:
+
+```powershell
+cd frontend
+npm install
+cp .env.example .env
+# edit .env if needed
+npm run dev
+```
+
+Notes:
+- This frontend uses cookie-based auth (httpOnly cookies). `api-client` sends requests with `credentials: include`.
+- After logging in the server sets cookies; frontend calls `/auth/me` or relies on `initAuthStore` to populate the user.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

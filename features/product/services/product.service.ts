@@ -1,5 +1,5 @@
 import { apiClient } from "@/shared/lib/api-client";
-import { ProductListResponse, Product } from "../../../shared/types";
+import { ProductListResponse, Product, ProductCreate } from "../../../shared/types";
 
 export const productService = {
   list: async (q = "", page = 1, pageSize = 10): Promise<ProductListResponse> => {
@@ -8,7 +8,7 @@ export const productService = {
     });
     return data;
   },
-  create: async (p: Product) => {
+  create: async (p: ProductCreate) => {
     const { data } = await apiClient.post<Product>("/products", p);
     return data;
   },

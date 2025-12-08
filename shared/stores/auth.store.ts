@@ -3,16 +3,13 @@ import { User } from "@/shared/types";
 
 type State = {
   user: User | null;
-  token: string | null;
   setUser: (u: User | null) => void;
-  setToken: (t: string | null) => void;
   rehydrated: boolean;
   setRehydrated: (v: boolean) => void;
 };
 
 export const useAuthStore = create<State>((set) => ({
   user: null,
-  token: null,
   rehydrated: false,
   setRehydrated: (v) => set({ rehydrated: v }),
   setUser: (u) => {
@@ -22,37 +19,43 @@ export const useAuthStore = create<State>((set) => ({
     }
     set({ user: u });
   },
-  setToken: (t) => {
-    if (typeof window !== "undefined") {
-      if (t) localStorage.setItem("access_token", t);
-      else localStorage.removeItem("access_token");
-    }
-    set({ token: t });
-  },
 }));
 
-//Rehydrate store
+//Rehydrate store: try to load saved user or request /auth/me using cookies
 export function initAuthStore() {
   if (typeof window === "undefined") return;
 
   const savedUser = localStorage.getItem("user");
-  const savedToken = localStorage.getItem("access_token");
-
-  if (savedUser) useAuthStore.setState({ user: JSON.parse(savedUser) });
-  if (savedToken) useAuthStore.setState({ token: savedToken });
-  useAuthStore.getState().setRehydrated(true);
-}
-
-export function getToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("access_token");
-}
-
-export function clearToken() {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
+  if (savedUser) {
+    useAuthStore.setState({ user: JSON.parse(savedUser) });
+    useAuthStore.getState().setRehydrated(true);
+    return;
   }
+
+  // Try to fetch /auth/me using cookies (httpOnly tokens)
+  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  fetch(`${API}/auth/me`, { credentials: "include" })
+    .then((r) => r.json())
+    .then((data) => {
+      if (data?.success && data.user) {
+        useAuthStore.setState({ user: data.user });
+      } else {
+        useAuthStore.setState({ user: null });
+      }
+    })
+    .catch(() => {
+      useAuthStore.setState({ user: null });
+    })
+    .finally(() => useAuthStore.getState().setRehydrated(true));
+}
+
+export async function clearUser() {
+  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  try {
+    await fetch(`${API}/auth/logout`, { method: "POST", credentials: "include" });
+  } catch (e) {
+    // ignore
+  }
+  if (typeof window !== "undefined") localStorage.removeItem("user");
   useAuthStore.getState().setUser(null);
-  useAuthStore.getState().setToken(null);
 }
