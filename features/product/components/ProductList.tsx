@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import Spinner from "@/shared/components/Spinner";
 import { useProducts } from "../hooks/useProducts";
 import { useProductMutations } from "../hooks/useProductMutations";
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useRef } from 'react';
 
 export default function ProductList() {
     const { q, setQ, page, setPage, rows, meta, isLoading, error, reload } = useProducts();
@@ -20,6 +22,16 @@ export default function ProductList() {
     const [selectedName, setSelectedName] = useState<string | null>(null);
 
     const canCreate = user?.roles?.some((r: any) => ["admin", "manage"].includes(r));
+
+    // virtualization setup
+    const listRef = useRef<HTMLDivElement | null>(null);
+    const rowHeight = 56; // estimated row height in px
+    const virtualizer = useVirtualizer({
+        count: rows.length,
+        getScrollElement: () => listRef.current,
+        estimateSize: () => rowHeight,
+        overscan: 6,
+    });
 
     function onCreated() {
         setFormErrors(null);
@@ -87,27 +99,29 @@ export default function ProductList() {
                     {rows.length === 0 ? (
                         <div className="p-6 text-center text-gray-500">No products found.</div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full table-auto">
-                                <thead>
-                                    <tr className="text-left text-sm text-gray-600 border-b">
-                                        <th className="py-2 px-3">Name</th>
-                                        <th className="py-2 px-3">Count</th>
-                                        <th className="py-2 px-3">Price</th>
-                                        <th className="py-2 px-3">Group</th>
-                                        <th className="py-2 px-3">Status</th>
-                                        <th className="py-2 px-3">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {rows.map((r: any) => (
-                                        <tr key={r.id} className="border-b hover:bg-gray-50">
-                                            <td className="py-3 px-3 font-medium">{r.name}</td>
-                                            <td className="py-3 px-3">{r.count}</td>
-                                            <td className="py-3 px-3">{typeof r.price === 'number' ? `$${r.price.toFixed(2)}` : r.price}</td>
-                                            <td className="py-3 px-3">{r.groupType}</td>
-                                            <td className="py-3 px-3"><span className={`px-2 py-1 rounded text-xs ${r.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{r.status}</span></td>
-                                            <td className="py-3 px-3">
+                        <div ref={listRef} className="overflow-auto" style={{ maxHeight: 520 }}>
+                            {/* Virtualized rows container */}
+                            <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
+                                {virtualizer.getVirtualItems().map((virtualRow) => {
+                                    const r = rows[virtualRow.index];
+                                    return (
+                                        <div
+                                            key={r.id}
+                                            style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                width: '100%',
+                                                transform: `translateY(${virtualRow.start}px)`,
+                                            }}
+                                            className="border-b hover:bg-gray-50 flex items-center"
+                                        >
+                                            <div className="py-3 px-3 w-1/3 font-medium">{r.name}</div>
+                                            <div className="py-3 px-3 w-1/6">{r.count}</div>
+                                            <div className="py-3 px-3 w-1/6">{typeof r.price === 'number' ? `$${r.price.toFixed(2)}` : r.price}</div>
+                                            <div className="py-3 px-3 w-1/6">{r.groupType}</div>
+                                            <div className="py-3 px-3 w-1/12"><span className={`px-2 py-1 rounded text-xs ${r.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{r.status}</span></div>
+                                            <div className="py-3 px-3 w-1/6">
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         title="Update count"
@@ -130,11 +144,11 @@ export default function ProductList() {
                                                         {loadingIds.includes(r.id) ? <Spinner size={14} /> : '🗑'}
                                                     </button>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
                 </div>
