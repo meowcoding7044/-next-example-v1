@@ -1,36 +1,19 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { productService } from "../services/product.service";
+import React from "react";
+import { useProducts } from "../hooks/useProducts";
 
 export default function ProductListClient({ initialData }: any) {
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(1);
-  const [rows, setRows] = useState<any[]>(initialData.data || []);
-  const [meta, setMeta] = useState<any>(initialData.meta || { page: 1, pageSize: 10, total: rows.length });
+  const initialPage = initialData?.meta?.page ?? 1;
+  const initialPageSize = initialData?.meta?.pageSize ?? 10;
+  const { q, setQ, page, setPage, rows, meta, isLoading, error } = useProducts("", initialPage, initialPageSize);
 
-  async function load() {
-    try {
-      const res = await productService.list(q, page, 10);
-      setRows(res.data || res);
-      setMeta(res.meta || { page: 1, pageSize: 10, total: (res.data || []).length });
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  useEffect(() => {
-    load();
-  }, [q, page]);
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading products</div>;
 
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <input
-          className="p-2 border flex-1"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="search..."
-        />
+        <input className="p-2 border flex-1" value={q} onChange={(e) => setQ(e.target.value)} placeholder="search..." />
         <button className="btn" onClick={() => setPage(1)}>Search</button>
       </div>
       <div className="bg-white p-4 rounded">

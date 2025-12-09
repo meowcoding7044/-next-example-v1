@@ -1,9 +1,10 @@
 "use client";
 import React, { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { productCreateSchema, ProductCreateInput } from "../validators/product.validator";
 import { productService } from "../services/product.service";
 import Spinner from "@/shared/components/Spinner";
+import { useProductMutations } from "../hooks/useProductMutations";
 
 export default function ProductForm({ onCreated }: { onCreated?: () => void }) {
   const [name, setName] = useState("");
@@ -16,42 +17,7 @@ export default function ProductForm({ onCreated }: { onCreated?: () => void }) {
   const [success, setSuccess] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
-
-  const mutation = useMutation<any, unknown, ProductCreateInput, { previous?: any }>({
-    mutationFn: (payload: ProductCreateInput) => productService.create(payload),
-    onMutate: async (newProduct: ProductCreateInput) => {
-      setError(null);
-      // cancel queries and snapshot
-      await queryClient.cancelQueries({ queryKey: ["products"] });
-      const previous = queryClient.getQueryData<any>(["products"]);
-      // optimistic insert at front
-      const temp = { id: `tmp-${Date.now()}`, ...newProduct };
-      queryClient.setQueryData(["products"], (old: any) => {
-        if (!old) return { data: [temp], meta: { page: 1, pageSize: 10, total: 1 } };
-        return { ...old, data: [temp, ...old.data], meta: { ...old.meta, total: (old.meta?.total || 0) + 1 } };
-      });
-      return { previous };
-    },
-    onError: (err: unknown, vars: ProductCreateInput, context: any) => {
-      if (context?.previous) queryClient.setQueryData(["products"], context.previous);
-      setError("Create failed");
-    },
-    onSuccess: (data: any) => {
-      setSuccess("Product created");
-      setName("");
-      setCount(0);
-      setPrice(0);
-      setGroupType("");
-      setStatus("active");
-      // ensure fresh data from server
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      onCreated?.();
-    },
-    onSettled: () => {
-      setTimeout(() => setSuccess(null), 2500);
-      setLoading(false);
-    },
-  });
+  const { createMutation } = useProductMutations();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,7 +31,23 @@ export default function ProductForm({ onCreated }: { onCreated?: () => void }) {
     }
     const payload = parsed.data as ProductCreateInput;
     setLoading(true);
-    mutation.mutate(payload);
+    setError(null);
+    createMutation.mutate(payload, {
+      onError: () => setError("Create failed"),
+      onSuccess: () => {
+        setSuccess("Product created");
+        setName("");
+        setCount(0);
+        setPrice(0);
+        setGroupType("");
+        setStatus("active");
+        onCreated?.();
+      },
+      onSettled: () => {
+        setTimeout(() => setSuccess(null), 2500);
+        setLoading(false);
+      },
+    });
   }
 
   return (

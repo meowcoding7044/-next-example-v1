@@ -3,5 +3,12 @@
 @import "tailwindcss/utilities";
 
 
-:root { --color-primary: #2563eb; --color-bg: #f9fafb; }
-body { margin: 0; font-family: system-ui, sans-serif; background: var(--color-bg); }
+:root {
+	--color-primary: #6366f1; /* indigo-500 */
+	--color-accent: #ec4899; /* pink-500 */
+	--color-bg: #f9fafb;
+	--brand-gradient: linear-gradient(135deg, #ff467e 0%, #a245f3 50%, #5b6bff 100%);
+	--font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+body { margin: 0; font-family: var(--font-sans); background: var(--color-bg); }

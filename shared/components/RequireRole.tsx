@@ -26,8 +26,7 @@ export default function RequireRole({
       return;
     }
     const ok = user.roles?.some((r) => roles.includes(r));
-    console.log("RequireRole : ", user)
-    if (!ok) router.push("/");
+    if (!ok) router.replace("/");
   }, [rehydrated, user, roles, router]);
 
   if (!rehydrated) return null;

@@ -8,4 +8,12 @@ export const userService = {
     const { data } = await apiClient.delete("/users/" + id);
     return data;
   },
+  create: async (payload: any) => {
+    const { data } = await apiClient.post("/users", payload);
+    return data;
+  },
+  update: async (id: string, payload: any) => {
+    const { data } = await apiClient.put("/users/" + id, payload);
+    return data;
+  },
 };

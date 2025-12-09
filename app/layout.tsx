@@ -2,7 +2,7 @@
 import "../styles/globals.css";
 import React from "react";
 import { ReactQueryProvider } from "@/providers/ReactProviders";
-import NavBar from "@/features/nav-bar/nav.bar";
+import NavBar from "@/features/navmenu/components/NavBar";
 import { Toaster } from "react-hot-toast";
 
 
@@ -13,9 +13,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <a className="sr-only focus:not-sr-only p-2" href="#content">Skip to content</a>
         <NavBar />
         <ReactQueryProvider>
-          {children}
+          <main id="content">{children}</main>
           <Toaster />
         </ReactQueryProvider>
       </body>
