@@ -59,8 +59,34 @@ export default function ProductForm({ onCreated }: { onCreated?: () => void }) {
     });
   }
 
+  function resetForm() {
+    setName("");
+    setCount(0);
+    setPrice(0);
+    setGroupType("");
+    setStatus("active");
+    setError(null);
+    setSuccess(null);
+  }
+
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded space-y-2 shadow-sm">
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h3 className="text-lg font-semibold">Create Product</h3>
+          <p className="text-sm text-gray-600">Add a new product to the inventory.</p>
+        </div>
+        <div>
+          <button
+            type="button"
+            className="text-sm text-gray-500 hover:underline"
+            onClick={resetForm}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
       {error && <div className="text-red-700 bg-red-100 p-2 rounded">{error}</div>}
       {success && <div className="text-green-700 bg-green-100 p-2 rounded">{success}</div>}
       <div className="flex gap-2">

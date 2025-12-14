@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useAuthStore } from "@/shared/stores/auth.store";
 import ProductForm from "./ProductForm";
 import ConfirmationModal from "@/shared/components/ConfirmationModal";
@@ -8,7 +8,6 @@ import Spinner from "@/shared/components/Spinner";
 import { useProducts } from "../hooks/useProducts";
 import { useProductMutations } from "../hooks/useProductMutations";
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useRef } from 'react';
 
 export default function ProductList() {
     const { q, setQ, page, setPage, rows, meta, isLoading, error, reload } = useProducts();
@@ -25,6 +24,7 @@ export default function ProductList() {
 
     // virtualization setup
     const listRef = useRef<HTMLDivElement | null>(null);
+    const asideRef = useRef<HTMLDivElement | null>(null);
     const rowHeight = 56; // estimated row height in px
     const virtualizer = useVirtualizer({
         count: rows.length,
@@ -73,15 +73,35 @@ export default function ProductList() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Create form (if allowed) */}
             {canCreate && (
-                <aside className="lg:col-span-1 bg-white p-4 rounded shadow">
+                <aside ref={asideRef} className="lg:col-span-1 bg-white p-4 rounded shadow">
                     <h2 className="text-lg font-semibold mb-2">Create Product</h2>
                     {formErrors && <div className="text-red-700 bg-red-100 p-2 rounded mb-2">{formErrors}</div>}
                     <ProductForm onCreated={onCreated} />
                 </aside>
             )}
 
-            {/* Right: List and controls */}
+            {/* Right: Header, List and controls */}
             <section className={`${canCreate ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-4`}>
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold">Products</h1>
+                        <p className="text-sm text-gray-600">{meta.total ?? 0} products</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        {canCreate && (
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => asideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                            >
+                                New Product
+                            </button>
+                        )}
+
+                        <button className="btn" onClick={() => reload()}>Refresh</button>
+                    </div>
+                </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                         <input className="p-2 border rounded flex-1" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products..." />
